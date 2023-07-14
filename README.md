@@ -9,6 +9,6 @@ Proyek ini dikembangkan sebagai bagian dari submission untuk Back-end Intermedia
 
 **Mohon untuk tidak menyalin atau meniru proyek ini dengan tujuan plagiat atau melanggar kebijakan akademik.**
 
-Jika Anda ingin belajar atau mendapatkan inspirasi dari proyek ini, silakan gunakan kode dan penjelasan yang diberikan sebagai referensi dan panduan. Kami mendorong Anda untuk memahami konsep, prinsip, dan teknik yang digunakan, dan menerapkannya dalam proyek Anda sendiri dengan gaya dan logika Anda sendiri.
+Jika Anda ingin belajar atau mendapatkan inspirasi dari proyek ini, silakan gunakan kode dan penjelasan yang diberikan sebagai referensi dan panduan.
 
 ---
