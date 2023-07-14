@@ -5,7 +5,7 @@ Proyek OpenMusic API versi 1 Submission Dicoding Back-End Intermediate
 
 **PERHATIAN: PROYEK INI HANYA UNTUK PEMBELAJARAN**
 
-Proyek ini dikembangkan sebagai bagian dari submission untuk Back-end Intermediate. Tujuan dari proyek ini adalah untuk memberikan pembelajaran dan pemahaman tentang pengembangan API menggunakan Hapi.js dan MongoDB.
+Proyek ini dikembangkan sebagai bagian dari submission untuk Back-end Intermediate.
 
 **Mohon untuk tidak menyalin atau meniru proyek ini dengan tujuan plagiat atau melanggar kebijakan akademik.**
 
