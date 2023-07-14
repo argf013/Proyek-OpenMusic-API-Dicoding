@@ -1,5 +1,6 @@
-# Proyek-OpenMusic-API-versi-1
-Proyek OpenMusic API versi 1 Submission Dicoding Back-End Intermediate
+# Proyek-OpenMusic-API
+Proyek OpenMusic API Submission Dicoding Back-End Intermediate
+Cek branch untuk melihat versi
 
 ---
 
