@@ -1,63 +1,49 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-underscore-dangle */
 const autoBind = require('auto-bind');
-const { baseErrorHandler } = require('../../utils');
-const BaseResponse = require('../../dto/BaseResponse');
+const Response = require('../../utils/Response');
 
-class SongsHandler {
+class SongHandler {
   constructor(service, validator) {
-    this._response = new BaseResponse();
     this._service = service;
     this._validator = validator;
+
     autoBind(this);
-    this.baseErrorHandler = baseErrorHandler;
   }
 
   async postSongHandler(request, h) {
-    this._validator.validateSongPayload(request.payload);
-    const {
-      title, year, genre, performer, duration, albumId,
-    } = request.payload;
-    const songId = await this._service.addSong({
-      title, year, genre, performer, duration, albumId,
+    this._validator.validatePayload(request.payload);
+
+    return Response.post(h, 'success', 'Song berhasil ditambahkan', {
+      songId: await this._service.addSong(request.payload),
     });
-    return h.response(this._response.normalResponse({ songId })).code(201);
+  }
+
+  async getSongHandler(request) {
+    return Response.get('success', {
+      songs: await this._service.getSongs(request.query),
+    });
   }
 
   async getSongByIdHandler(request, h) {
-    const { id } = request.params;
-    const song = await this._service.getSongById(id);
-    return this._response.normalResponse({ song });
-  }
-
-  async getSongsHandler(request, h) {
-    const { title, performer } = request.query;
-    const songs = await this._service.getSongs({ title, performer });
-    return this._response.normalResponse({ songs });
+    return Response.get('success', {
+      song: await this._service.getSongById(request.params.id),
+    });
   }
 
   async putSongByIdHandler(request, h) {
-    this._validator.validateSongPayload(request.payload);
-    const { id } = request.params;
-    await this._service.editSongById(id, request.payload);
-    return this._response.normalMessageResponse('Lagu berhasil diperbarui.');
+    this._validator.validatePayload(request.payload);
+
+    await this._service.editSongById(request.params.id, request.payload);
+
+    return Response.putOrDelete('success', 'Song berhasil diperbarui');
   }
 
   async deleteSongByIdHandler(request, h) {
-    const { id } = request.params;
-    await this._service.deleteSongById(id);
-    return this._response.normalMessageResponse('Lagu berhasil dihapus.');
-  }
+    await this._service.deleteSongById(request.params.id);
 
-  onPreResponseHandler(request, h) {
-    const { response } = request;
-
-    if (response.isBoom) {
-      return this.baseErrorHandler(response, h);
-    }
-
-    return h.continue;
+    return Response.putOrDelete('success', 'Song berhasil dihapus');
   }
 }
 
-module.exports = SongsHandler;
+module.exports = SongHandler;
