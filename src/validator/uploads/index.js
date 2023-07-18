@@ -1,0 +1,14 @@
+import schema from './schema.js'
+import InvariantError from '../../exceptions/InvariantError.js'
+
+class UploadsValidator {
+  validate = (data) => {
+    const result = schema.validate(data)
+
+    if (result.error) {
+      throw new InvariantError(result.error.message)
+    }
+  }
+}
+
+export default UploadsValidator

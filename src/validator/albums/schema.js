@@ -1,13 +1,9 @@
-const Joi = require('joi');
+import Joi from 'joi'
 
-const AlbumPayloadSchema = Joi.object({
-  name: Joi.string().max(100).required(),
+const currentYear = new Date().getFullYear()
+const schema = Joi.object({
+  name: Joi.string().required(),
+  year: Joi.number().integer().min(1900).max(currentYear).required()
+})
 
-  year: Joi.number()
-    .integer()
-    .min(1900)
-    .max(new Date().getFullYear())
-    .required(),
-});
-
-module.exports = { AlbumPayloadSchema };
+export default schema

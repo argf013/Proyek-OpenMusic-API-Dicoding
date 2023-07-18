@@ -1,8 +1,8 @@
-const Joi = require('joi');
+import Joi from 'joi'
 
-const CollaborationPayloadSchema = Joi.object({
+const schema = Joi.object({
   playlistId: Joi.string().required(),
-  userId: Joi.string().required(),
-});
+  userId: Joi.string().required()
+})
 
-module.exports = { CollaborationPayloadSchema };
+export default schema

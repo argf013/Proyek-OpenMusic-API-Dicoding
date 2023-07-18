@@ -1,9 +1,9 @@
-const Joi = require('joi');
+import Joi from 'joi'
 
-const UserPayloadSchema = Joi.object({
-  username: Joi.string().min(4).max(32).required(),
-  password: Joi.string().min(4).max(18).required(),
-  fullname: Joi.string().min(3).max(50).required(),
-});
+const schema = Joi.object({
+  username: Joi.string().required(),
+  password: Joi.string().required(),
+  fullname: Joi.string().required()
+})
 
-module.exports = { UserPayloadSchema };
+export default schema

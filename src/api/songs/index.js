@@ -1,11 +1,9 @@
-const SongHandler = require('./handler');
-const routes = require('./routes');
+import routes from './route.js'
 
-module.exports = {
-  name: 'songs',
-  version: '1.0.0',
-  register: async (server, { service, validator }) => {
-    const songHandler = new SongHandler(service, validator);
-    server.route(routes(songHandler));
-  },
-};
+const name = 'songs'
+const version = '1.0.0'
+const register = async (server) => {
+  server.route(routes())
+}
+
+export default { register, name, version }

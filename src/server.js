@@ -1,148 +1,97 @@
-/* eslint-disable no-use-before-define */
-require('dotenv').config();
-
-const Hapi = require('@hapi/hapi');
-const Jwt = require('@hapi/jwt');
-
-const Response = require('./utils/Response');
-
-const albums = require('./api/albums');
-const AlbumsService = require('./services/albums/AlbumsService');
-const AlbumValidator = require('./validator/albums');
-
-const songs = require('./api/songs');
-const SongsService = require('./services/songs/SongService');
-const SongValidator = require('./validator/songs');
-
-const users = require('./api/users');
-const UsersService = require('./services/users/UsersService');
-const UsersValidator = require('./validator/users');
-
-const authentications = require('./api/authentications');
-const AuthenticationsService = require('./services/authentications/AuthenticationsService');
-const TokenManager = require('./utils/TokenManager');
-const AuthenticationsValidator = require('./validator/authentications');
-
-const playlists = require('./api/playlists');
-const PlaylistsService = require('./services/playlists/PlaylistsService');
-const PlaylistsValidator = require('./validator/playlists');
-
-const collaborations = require('./api/collaborations');
-const CollaborationsService = require('./services/collaborations/CollaborationsService');
-const CollaborationsValidator = require('./validator/collaborations');
+import { server as _server } from '@hapi/hapi'
+import jwt from '@hapi/jwt'
+import Inert from '@hapi/inert'
+import ClientError from './exceptions/ClientError.js'
+import albums from './api/albums/index.js'
+import songs from './api/songs/index.js'
+import users from './api/users/index.js'
+import authentications from './api/authentications/index.js'
+import collaborations from './api/collaborations/index.js'
+import playlists from './api/playlists/index.js'
+import exports from './api/exports/index.js'
+import uploads from './api/uploads/index.js'
+import config from './utils/config.js'
 
 const init = async () => {
-  const usersService = new UsersService();
-  const authenticationsService = new AuthenticationsService();
-  const playlistsService = new PlaylistsService();
-  const collaborationsService = new CollaborationsService();
-
-  const server = Hapi.server({
-    port: process.env.PORT,
-    host: process.env.HOST,
+  const server = _server({
+    host: config.app.host,
+    port: config.app.port,
     routes: {
       cors: {
-        origin: ['*'],
-      },
-    },
-  });
+        origin: ['*']
+      }
+    }
+  })
 
-  await server.register(registerExternalPlugins());
+  await server.register([jwt, Inert])
 
-  server.auth.strategy('yess_jwt', 'jwt', {
-    keys: process.env.ACCESS_TOKEN_KEY,
+  server.auth.strategy('jwt_auth', 'jwt', {
+    keys: config.jwt.accessKey,
     verify: {
       aud: false,
       iss: false,
       sub: false,
-      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+      maxAgeSec: config.jwt.maxAge
     },
-    validate: (artifacts) => ({
-      isValid: true,
-      credentials: {
-        id: artifacts.decoded.payload.id,
-      },
-    }),
-  });
+    validate: (artifacts) => {
+      return {
+        isValid: true,
+        Credentials: {
+          id: artifacts.decoded.payload.id
+        }
+      }
+    }
+  })
 
-  await server.register(
-    registerPlugins(
-      usersService,
-      authenticationsService,
-      playlistsService,
-      collaborationsService,
-    ),
-  );
+  await server.register([
+    albums,
+    songs,
+    users,
+    authentications,
+    playlists,
+    collaborations,
+    exports,
+    uploads
+  ])
 
-  server.ext('onPreResponse', Response.errorHandler());
+  server.ext('onPreResponse', (request, h) => {
+    const { response } = request
 
-  await server.start();
+    if (response instanceof Error) {
+      let errRes = {}
+      let errCode = 500
 
-  console.log(`Application running on port ${server.info.uri}`);
-};
+      if (response instanceof ClientError) {
+        errCode = response.statusCode ?? 400
+        errRes = {
+          status: 'fail',
+          message: response.message
+        }
+      } else if (!response.isServer) {
+        errCode = response.output.statusCode ?? 400
+        errRes = {
+          status: 'fail',
+          message: response.message
+        }
+      } else {
+        errRes = {
+          status: 'error',
+          message: 'Server Cannot Process Your Request'
+        }
+        if (config.app.env === 'development') {
+          console.log(response.stack)
+          errRes.data = response.message
+        }
+      }
 
-init();
+      return h.response(errRes).code(errCode)
+    }
 
-function registerPlugins(
-  usersService,
-  authenticationsService,
-  playlistsService,
-  collaborationsService,
-) {
-  return [
-    {
-      plugin: albums,
-      options: {
-        service: new AlbumsService(),
-        validator: AlbumValidator,
-      },
-    },
-    {
-      plugin: songs,
-      options: {
-        service: new SongsService(),
-        validator: SongValidator,
-      },
-    },
-    {
-      plugin: users,
-      options: {
-        service: usersService,
-        validator: UsersValidator,
-      },
-    },
-    {
-      plugin: playlists,
-      options: {
-        service: playlistsService,
-        validator: PlaylistsValidator,
-      },
-    },
-    {
-      plugin: authentications,
-      options: {
-        authenticationsService,
-        usersService,
-        tokenManager: TokenManager,
-        validator: AuthenticationsValidator,
-      },
-    },
-    {
-      plugin: collaborations,
-      options: {
-        collaborationsService,
-        playlistsService,
-        tokenManager: TokenManager,
-        validator: CollaborationsValidator,
-      },
-    },
-  ];
+    return h.continue
+  })
+
+  await server.start()
+  console.log('Server running on %s', server.info.uri)
 }
 
-function registerExternalPlugins() {
-  return [
-    {
-      plugin: Jwt,
-    },
-  ];
-}
+init()

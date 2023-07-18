@@ -1,12 +1,8 @@
-/* eslint-disable max-len */
-const CollaborationsHandler = require('./handler');
-const routes = require('./routes');
+import routes from './route.js'
 
-module.exports = {
-  name: 'collaborations',
-  version: '1.0.0',
-  register: async (server, { collaborationsService, playlistsService, validator }) => {
-    const collaborationsHandler = new CollaborationsHandler(collaborationsService, playlistsService, validator);
-    server.route(routes(collaborationsHandler));
-  },
-};
+const name = 'collaborations'
+const version = '1.0.0'
+const register = async (server) => {
+  server.route(routes())
+}
+export default { register, name, version }

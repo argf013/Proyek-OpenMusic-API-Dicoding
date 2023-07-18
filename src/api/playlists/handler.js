@@ -1,100 +1,131 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-underscore-dangle */
-const autoBind = require('auto-bind');
-const Response = require('../../utils/Response');
+import PlaylistService from '../../services/PlaylistService.js'
+import PlaylistValidator from '../../validator/playlists/index.js'
+import autoBind from 'auto-bind'
 
 class PlaylistHandler {
-  constructor(service, validator) {
-    this._service = service;
-    this._validator = validator;
+  constructor () {
+    this._service = new PlaylistService()
+    this._validator = new PlaylistValidator()
 
-    autoBind(this);
+    autoBind(this)
   }
 
-  async postPlaylistHandler(request, h) {
-    this._validator.validatePayload(request.payload);
+  async getPlaylistActivityHandler (request, h) {
+    const { id: ownerId } = request.auth.credentials
+    const playlistId = request.params
 
-    return Response.post(h, 'success', 'Playlist berhasil ditambahkan', {
-      playlistId: await this._service.addPlaylist({
-        name: request.payload.name,
-        owner: request.auth.credentials.id,
-      }),
-    });
+    await this._service.checkPlaylistAccess(ownerId, playlistId.id)
+
+    const activities = await this._service.getActivities(playlistId.id)
+    const response = h.response({
+      status: 'success',
+      data: activities
+    })
+    response.code(200)
+    return response
   }
 
-  async postSongToPlaylistHandler(request, h) {
-    this._validator.validateAddSongToPlaylistPayload(request.payload);
+  async deletePlaylistSongHandler (request, h) {
+    const songIdValidated = this._validator.validatePlaylistSong(request.payload)
 
-    await this._service.addSongToPlaylist(
-      request.params.playlistId,
-      request.payload.songId,
-      request.auth.credentials.id,
-    );
+    const { id: ownerId } = request.auth.credentials
+    const playlistId = request.params
 
-    return Response.put(h, 'success', 'Playlist berhasil diperbarui');
+    await this._service.checkPlaylistAccess(ownerId, playlistId.id)
+
+    await this._service.deletePlaylistSong(ownerId, songIdValidated.songId, playlistId.id)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Song successfully deleted from playlist'
+    })
+    response.code(200)
+    return response
   }
 
-  async getSongByPlaylist(request) {
-    return Response.get('success', {
-      playlist: await this._service.getSongByPlaylist(
-        request.params.playlistId,
-        request.auth.credentials.id,
-      ),
-    });
+  async getPlaylistSongHandler (request, h) {
+    const { id: ownerId } = request.auth.credentials
+
+    const playlistId = request.params
+
+    await this._service.checkPlaylistAccess(ownerId, playlistId.id)
+
+    const result = await this._service.getPlaylistSong(playlistId.id)
+
+    const response = h.response({
+      status: 'success',
+      data: result
+    })
+    response.code(200)
+    return response
   }
 
-  async getPlaylistHandler(request) {
-    return Response.get('success', {
-      playlists: await this._service.getPlaylists(request.auth.credentials.id),
-    });
+  async postPlaylistSongHandler (request, h) {
+    const songIdValidated = this._validator.validatePlaylistSong(request.payload)
+
+    const { id: ownerId } = request.auth.credentials
+
+    const playlistId = request.params
+
+    await this._service.checkPlaylistAccess(ownerId, playlistId.id)
+
+    await this._service.addPlaylistSong(ownerId, songIdValidated.songId, playlistId.id)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Song successfully added to playlist'
+    })
+    response.code(201)
+    return response
   }
 
-  async getPlaylistByIdHandler(request, h) {
-    return Response.get('success', {
-      playlist: await this._service.getPlaylistById(request.params.id),
-    });
+  async postPlaylistHandler (request, h) {
+    const data = this._validator.validatePlaylist(request.payload)
+
+    const { id: ownerId } = request.auth.credentials
+
+    const playlistId = await this._service.addPlaylist(ownerId, data)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Playlist successfully added',
+      data: {
+        playlistId
+      }
+    })
+    response.code(201)
+    return response
   }
 
-  async getActivities(request) {
-    return Response.get(
-      'success',
-      await this._service.getPlaylistsActivities(
-        request.params.playlistId,
-        request.auth.credentials.id,
-      ),
-    );
+  async getplaylistHandler (request, h) {
+    const { id: ownerId } = request.auth.credentials
+
+    const playlists = await this._service.getPlaylists(ownerId)
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        playlists
+      }
+    })
+    return response
   }
 
-  async putPlaylistByIdHandler(request, h) {
-    this._validator.validatePayload(request.payload);
+  async deletePlaylistByIdHandler (request, h) {
+    const { id } = request.params
+    const { id: ownerId } = request.auth.credentials
 
-    await this._service.editPlaylistById(request.params.id, request.payload);
+    await this._service.checkPlaylistOwner(id, ownerId)
 
-    return Response.putOrDelete('success', 'Playlist berhasil diperbarui');
-  }
+    await this._service.deletePlaylistById(id)
 
-  async deletePlaylistByIdHandler(request, h) {
-    await this._service.verifyNotOwner(
-      request.params.id,
-      request.auth.credentials.id,
-    );
-
-    await this._service.deletePlaylistById(request.params.id);
-
-    return Response.putOrDelete('success', 'Playlist berhasil dihapus');
-  }
-
-  async deleteSongByPlaylist(request) {
-    this._validator.validateAddSongToPlaylistPayload(request.payload);
-
-    await this._service.deletePlaylistByPlaylistIdAndSong(
-      request.params.playlistId,
-      request.payload.songId,
-      request.auth.credentials.id,
-    );
-
-    return Response.putOrDelete('success', 'Playlist berhasil dihapus');
+    const response = h.response({
+      status: 'success',
+      message: 'Playlist successfully deleted'
+    })
+    response.code(200)
+    return response
   }
 }
 
-module.exports = PlaylistHandler;
+export default PlaylistHandler

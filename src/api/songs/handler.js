@@ -1,49 +1,82 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-underscore-dangle */
-const autoBind = require('auto-bind');
-const Response = require('../../utils/Response');
+import SongService from '../../services/SongService.js'
+import SongValidator from '../../validator/songs/index.js'
+import autoBind from 'auto-bind'
 
 class SongHandler {
-  constructor(service, validator) {
-    this._service = service;
-    this._validator = validator;
+  constructor () {
+    this._service = new SongService()
+    this._validator = new SongValidator()
 
-    autoBind(this);
+    autoBind(this)
   }
 
-  async postSongHandler(request, h) {
-    this._validator.validatePayload(request.payload);
+  async postSongHandler (request, h) {
+    const data = this._validator.validate(request.payload)
 
-    return Response.post(h, 'success', 'Song berhasil ditambahkan', {
-      songId: await this._service.addSong(request.payload),
-    });
+    const songId = await this._service.addSong(data)
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        songId
+      }
+    })
+    response.code(201)
+    return response
   }
 
-  async getSongHandler(request) {
-    return Response.get('success', {
-      songs: await this._service.getSongs(request.query),
-    });
+  async getSongsHandler (request, h) {
+    const queryParams = request.query
+
+    const songs = await this._service.getSongs(queryParams)
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        songs
+      }
+    })
+    return response
   }
 
-  async getSongByIdHandler(request, h) {
-    return Response.get('success', {
-      song: await this._service.getSongById(request.params.id),
-    });
+  async getSongByIdHandler (request, h) {
+    const { id } = request.params
+
+    const song = await this._service.getSongById(id)
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        song
+      }
+    })
+    return response
   }
 
-  async putSongByIdHandler(request, h) {
-    this._validator.validatePayload(request.payload);
+  async editSongHandler (request, h) {
+    const songValidated = this._validator.validate(request.payload)
+    const { id } = request.params
 
-    await this._service.editSongById(request.params.id, request.payload);
+    await this._service.editSongById(id, songValidated)
 
-    return Response.putOrDelete('success', 'Song berhasil diperbarui');
+    const response = h.response({
+      status: 'success',
+      message: 'Song updated'
+    })
+    return response
   }
 
-  async deleteSongByIdHandler(request, h) {
-    await this._service.deleteSongById(request.params.id);
+  async deleteSongHandler (request, h) {
+    const { id } = request.params
 
-    return Response.putOrDelete('success', 'Song berhasil dihapus');
+    await this._service.deleteSongById(id)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Song deleted'
+    })
+    return response
   }
-}
+};
 
-module.exports = SongHandler;
+export default SongHandler

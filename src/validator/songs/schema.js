@@ -1,16 +1,12 @@
-const Joi = require('joi');
+import Joi from 'joi'
 
-const SongPayloadSchema = Joi.object({
-  title: Joi.string().max(100).required(),
-  year: Joi.number()
-    .integer()
-    .min(1900)
-    .max(new Date().getFullYear())
-    .required(),
-  genre: Joi.string().max(100).required(),
-  performer: Joi.string().max(100).required(),
+const schema = Joi.object({
+  title: Joi.string().required(),
+  year: Joi.number().required(),
+  genre: Joi.string().required(),
+  performer: Joi.string().required(),
   duration: Joi.number(),
-  albumId: Joi.string().max(30),
-});
+  albumId: Joi.string()
+})
 
-module.exports = { SongPayloadSchema };
+export default schema

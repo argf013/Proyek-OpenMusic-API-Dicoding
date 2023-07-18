@@ -1,28 +1,29 @@
-/* eslint-disable no-underscore-dangle */
-const autoBind = require('auto-bind');
-const Response = require('../../utils/Response');
+import UserService from '../../services/UserService.js'
+import UserValidator from '../../validator/users/index.js'
+import autoBind from 'auto-bind'
 
-class UsersHandler {
-  constructor(service, validator) {
-    this._service = service;
-    this._validator = validator;
+class UserHandler {
+  constructor () {
+    this._service = new UserService()
+    this._validator = new UserValidator()
 
-    autoBind(this);
+    autoBind(this)
   }
 
-  async postUserHandler(request, h) {
-    this._validator.validateUserPayload(request.payload);
+  async postUserHandler (request, h) {
+    const data = await this._validator.validate(request.payload)
 
-    return Response.post(h, 'success', 'User berhasil ditambahkan', {
-      userId: await this._service.addUser(request.payload),
-    });
-  }
+    const userId = await this._service.addUser(data)
 
-  async getUserByIdHandler(request) {
-    return Response.get('success', {
-      user: await this._service.getUserById(request.params.id),
-    });
+    const response = h.response({
+      status: 'success',
+      data: {
+        userId
+      }
+    })
+    response.code(201)
+    return response
   }
 }
 
-module.exports = UsersHandler;
+export default UserHandler
