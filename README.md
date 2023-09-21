@@ -10,6 +10,4 @@ Proyek ini dikembangkan sebagai bagian dari submission untuk Back-end Intermedia
 
 **Mohon untuk tidak menyalin atau meniru proyek ini dengan tujuan plagiat atau melanggar kebijakan akademik.**
 
-Jika Anda ingin belajar atau mendapatkan inspirasi dari proyek ini, silakan gunakan kode dan penjelasan yang diberikan sebagai referensi dan panduan.
-
 ---
